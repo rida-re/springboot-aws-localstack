@@ -55,6 +55,10 @@ jobs:
         working-directory: terraform
         run: terraform init
 
+      - name: Destroy Terraform
+        working-directory: terraform
+        run: terraform destroy -auto-approve
+
       - name: Apply Terraform
         working-directory: terraform
         run: terraform apply -auto-approve

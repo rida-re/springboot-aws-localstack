@@ -37,9 +37,9 @@ public class AwsResourceInitializer {
 
     @PostConstruct
     public void init() {
-        createS3Bucket();
-        createSqsQueue();
-        createDynamoTable();
+       // createS3Bucket();
+       // createSqsQueue();
+       // createDynamoTable();
     }
 
     private void createS3Bucket() {
