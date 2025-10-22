@@ -12,7 +12,7 @@ resource "aws_instance" "spring_app" {
               sudo amazon-linux-extras install docker -y
               sudo service docker start
               sudo usermod -a -G docker ec2-user
-              docker run -d -p 8080:8080 ${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.ecr_repo_name}:latest
+              docker run -d -p 8080:8080 000000000000.dkr.ecr.${var.aws_region}.amazonaws.com/${var.ecr_repo_name}:latest
               EOF
 
   tags = {
