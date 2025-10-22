@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: localstack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: localstack
+  template:
+    metadata:
+      labels:
+        app: localstack
+    spec:
+      containers:
+        - name: localstack
+          image: localstack/localstack:latest
+          ports:
+            - containerPort: 4566
+            - containerPort: 4571
+          env:
+            - name: SERVICES
+              value: s3,sqs,sns,dynamodb,lambda,sts
+            - name: DEBUG
+              value: "1"
+            - name: DATA_DIR
+              value: /tmp/localstack/data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: localstack
+spec:
+  type: ClusterIP
+  selector:
+    app: localstack
+  ports:
+    - name: edge
+      port: 4566
+      targetPort: 4566
+    - name: legacy
+      port: 4571
+      targetPort: 4571

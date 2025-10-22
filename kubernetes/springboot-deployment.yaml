@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: springboot-app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: springboot-app
@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
         - name: springboot-app
-          image: <ACCOUNT_ID>.dkr.ecr.eu-west-3.amazonaws.com/myapp:latest
+          image: springboot-aws-localstack:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           env:
@@ -32,9 +33,9 @@ kind: Service
 metadata:
   name: springboot-service
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: springboot-app
   ports:
-    - port: 80
+    - port: 8080
       targetPort: 8080
