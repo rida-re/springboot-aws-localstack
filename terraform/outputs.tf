@@ -10,6 +10,10 @@ output "dynamodb_table_name" {
   value = aws_dynamodb_table.items_table.name
 }
 
+output "ses_email_identity" {
+  value = aws_ses_email_identity.example.email
+}
+
 output "ec2_public_ip" {
   value = try(aws_instance.spring_app[0].public_ip, null)
 }

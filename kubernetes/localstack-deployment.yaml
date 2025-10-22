@@ -20,7 +20,7 @@ spec:
             - containerPort: 4571
           env:
             - name: SERVICES
-              value: s3,sqs,sns,dynamodb,lambda,sts
+              value: s3,sqs,sns,dynamodb,lambda,sts,ses
             - name: DEBUG
               value: "1"
             - name: DATA_DIR

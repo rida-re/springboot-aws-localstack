@@ -21,3 +21,9 @@ resource "aws_dynamodb_table" "items_table" {
 }
 
 
+# Create SES email
+resource "aws_ses_email_identity" "example" {
+  email = "noreply@example.com"
+}
+
+

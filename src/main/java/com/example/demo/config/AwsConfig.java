@@ -8,6 +8,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
 import java.net.URI;
@@ -57,5 +58,18 @@ public class AwsConfig {
                                      StaticCredentialsProvider.create(AwsBasicCredentials.create("test", "test"))
                              )
                              .build();
+    }
+
+    @Bean
+    public SesClient sesClient() {
+        return SesClient.builder()
+                        .endpointOverride(URI.create(LOCALSTACK_ENDPOINT))
+                        .region(Region.US_EAST_1)
+                        .credentialsProvider(
+                                StaticCredentialsProvider.create(
+                                        AwsBasicCredentials.create("test", "test")
+                                )
+                        )
+                        .build();
     }
 }

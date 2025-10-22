@@ -8,14 +8,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/messages")
-public class MessageController {
+public class SqsMessageController {
 
     private final SqsClient sqsClient;
 
     @Value("${aws.sqs.queue}")
     private String queueName;
 
-    public MessageController(SqsClient sqsClient) {
+    public SqsMessageController(SqsClient sqsClient) {
         this.sqsClient = sqsClient;
     }
 
