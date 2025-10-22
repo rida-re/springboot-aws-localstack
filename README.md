@@ -6,3 +6,4 @@ springboot AWS LocalStack
 2. terraform apply -auto-approve
 
 terraform destroy -auto-approve
+terrafrom validate
