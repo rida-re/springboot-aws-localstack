@@ -60,13 +60,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: test
           AWS_REGION: us-east-1
           AWS_ENDPOINT_URL: http://localhost:4566
-        run: |
-          echo "Waiting for LocalStack to be healthy..."
-          until curl -s http://localhost:4566/_localstack/health | grep "\"initialized\": true" > /dev/null; do
-            echo "Waiting..."
-            sleep 2
-          done
-          mvn test
+        run: mvn test
 
       # ──────────────────────────────
       # 5. Set up Terraform
