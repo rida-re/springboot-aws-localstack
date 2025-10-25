@@ -5,9 +5,13 @@ import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.apigateway.ApiGatewayClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.lambda.LambdaClient;
+import software.amazon.awssdk.services.rds.RdsClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
@@ -17,7 +21,11 @@ import java.net.URI;
 public class AwsConfig {
 
     private static final String LOCALSTACK_ENDPOINT =
-            System.getenv().getOrDefault("LOCALSTACK_ENDPOINT", "http://localhost:4566");
+            System.getenv()
+                  .getOrDefault("LOCALSTACK_ENDPOINT", "http://localhost:4566");
+
+    private final String accessKeyId = "test";
+    private final String secretAccessKey = "test";
 
     @Bean
     public S3Client s3Client() {
@@ -26,13 +34,13 @@ public class AwsConfig {
                        .region(Region.US_EAST_1)
                        .credentialsProvider(
                                StaticCredentialsProvider.create(
-                                       AwsBasicCredentials.create("test", "test")
+                                       AwsBasicCredentials.create(accessKeyId, secretAccessKey)
                                )
                        )
                        .serviceConfiguration(
-                        S3Configuration.builder()
-                                       .pathStyleAccessEnabled(true) // 👈 important!
-                                       .build())
+                               S3Configuration.builder()
+                                              .pathStyleAccessEnabled(true) // 👈 important!
+                                              .build())
                        .build();
     }
 
@@ -43,7 +51,7 @@ public class AwsConfig {
                         .region(Region.US_EAST_1)
                         .credentialsProvider(
                                 StaticCredentialsProvider.create(
-                                        AwsBasicCredentials.create("test", "test")
+                                        AwsBasicCredentials.create(accessKeyId, secretAccessKey)
                                 )
                         )
                         .build();
@@ -55,7 +63,7 @@ public class AwsConfig {
                              .endpointOverride(URI.create(LOCALSTACK_ENDPOINT))
                              .region(Region.US_EAST_1)
                              .credentialsProvider(
-                                     StaticCredentialsProvider.create(AwsBasicCredentials.create("test", "test"))
+                                     StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKeyId, secretAccessKey))
                              )
                              .build();
     }
@@ -67,9 +75,58 @@ public class AwsConfig {
                         .region(Region.US_EAST_1)
                         .credentialsProvider(
                                 StaticCredentialsProvider.create(
-                                        AwsBasicCredentials.create("test", "test")
+                                        AwsBasicCredentials.create(accessKeyId, secretAccessKey)
                                 )
                         )
                         .build();
     }
+
+    @Bean
+    public RdsClient rdsClient() {
+        return RdsClient.builder()
+                        .endpointOverride(URI.create(LOCALSTACK_ENDPOINT))
+                        .region(Region.US_EAST_1)
+                        .credentialsProvider(
+                                StaticCredentialsProvider.create(
+                                        AwsBasicCredentials.create(accessKeyId, secretAccessKey)
+                                )
+                        )
+                        .build();
+    }
+
+    @Bean
+    public LambdaClient lambdaClient() {
+        return LambdaClient.builder()
+                           .endpointOverride(URI.create(LOCALSTACK_ENDPOINT))
+                           .region(Region.US_EAST_1)
+                           .credentialsProvider(StaticCredentialsProvider.create(
+                                   AwsBasicCredentials.create(accessKeyId, secretAccessKey)
+                           ))
+                           .build();
+    }
+
+    @Bean
+    public ApiGatewayClient apiGatwayClient() {
+        return ApiGatewayClient.builder()
+                               .endpointOverride(URI.create(LOCALSTACK_ENDPOINT))
+                               .region(Region.US_EAST_1)
+                               .credentialsProvider(StaticCredentialsProvider.create(
+                                       AwsBasicCredentials.create(accessKeyId, secretAccessKey)
+                               ))
+                               .build();
+    }
+
+
+    @Bean
+    public SecretsManagerClient secretsManagerClient() {
+        return SecretsManagerClient.builder()
+                                   .endpointOverride(URI.create(LOCALSTACK_ENDPOINT))
+                                   .region(Region.US_EAST_1)
+                                   .credentialsProvider(StaticCredentialsProvider.create(
+                                           AwsBasicCredentials.create(accessKeyId, secretAccessKey)
+                                   ))
+                                   .build();
+    }
+
+
 }

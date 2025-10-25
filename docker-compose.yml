@@ -7,11 +7,12 @@ services:
       - "4566:4566"
       - "4571:4571"
     environment:
-      - SERVICES=s3,sqs,sns,dynamodb,lambda,sts,ses
+      - SERVICES=s3,sqs,sns,dynamodb,lambda,sts,ses,rds,apigateway,secretsmanager
       - DEBUG=1
       - DATA_DIR=/tmp/localstack/data
     volumes:
       - "./localstack-data:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
   app:
     build: .
     container_name: springboot-aws-localstack

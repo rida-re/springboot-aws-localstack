@@ -25,5 +25,6 @@ provider "aws" {
     dynamodb = "http://localhost:4566"
     sts      = "http://localhost:4566"
     ses      = "http://localhost:4566"
+    rds      = "http://localhost:4566"
   }
 }

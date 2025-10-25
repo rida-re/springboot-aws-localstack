@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.awssdk.services.rds.RdsClient;
+import software.amazon.awssdk.services.rds.model.*;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
@@ -16,6 +18,17 @@ import software.amazon.awssdk.services.ses.model.VerifyEmailIdentityRequest;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
 import software.amazon.awssdk.services.sqs.model.QueueDoesNotExistException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.lambda.LambdaClient;
+import software.amazon.awssdk.services.lambda.model.*;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 @Component
 public class AwsResourceInitializer {
@@ -24,7 +37,7 @@ public class AwsResourceInitializer {
     private final SqsClient sqsClient;
     private final DynamoDbClient dynamoDbClient;
     private final SesClient sesClient;
-
+    private final RdsClient rdsClient;
 
     @Value("${aws.s3.bucket}")
     private String bucketName;
@@ -38,11 +51,37 @@ public class AwsResourceInitializer {
     @Value("${aws.ses.sender}")
     private String senderEmail;
 
-    public AwsResourceInitializer(S3Client s3Client, SqsClient sqsClient, DynamoDbClient dynamoDbClient, SesClient sesClient) {
+    @Value("${aws.rds.instance}")
+    private String rdsInstanceId;
+
+    @Value("${aws.rds.dbName}")
+    private String rdsDbName;
+
+    @Value("${aws.rds.username}")
+    private String rdsUsername;
+
+    @Value("${aws.rds.password}")
+    private String rdsPassword;
+
+    @Autowired
+    private LambdaClient lambdaClient;
+
+    @Value("${aws.lambda.functionName:demo-function}")
+    private String functionName;
+
+    @Value("${aws.lambda.handler:com.example.demo.LambdaHandler::handleRequest}")
+    private String handler;
+
+    @Value("${aws.lambda.runtime:java11}")
+    private String runtime;
+
+
+    public AwsResourceInitializer(S3Client s3Client, SqsClient sqsClient, DynamoDbClient dynamoDbClient, SesClient sesClient, RdsClient rdsClient) {
         this.s3Client = s3Client;
         this.sqsClient = sqsClient;
         this.dynamoDbClient = dynamoDbClient;
         this.sesClient = sesClient;
+        this.rdsClient = rdsClient;
     }
 
     @PostConstruct
@@ -50,7 +89,8 @@ public class AwsResourceInitializer {
         // createS3Bucket();
         // createSqsQueue();
         // createDynamoTable();
-        createSesEmailVerified();
+        // createRdsInstance();
+        // createSesEmailVerified();
     }
 
     private void createS3Bucket() {
@@ -137,6 +177,70 @@ public class AwsResourceInitializer {
         } catch (Exception e) {
             System.err.println("❌ Error initializing SES identity: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void createRdsInstance() {
+        try {
+            DescribeDbInstancesResponse resp = rdsClient.describeDBInstances(DescribeDbInstancesRequest.builder()
+                                                                                                   .dbInstanceIdentifier(rdsInstanceId)
+                                                                                                   .build());
+            System.out.println("✅ RDS instance already exists: " + rdsInstanceId);
+        } catch (RdsException e) {
+            System.out.println("⚙️ Creating RDS Postgres instance: " + rdsInstanceId);
+            rdsClient.createDBInstance(CreateDbInstanceRequest.builder()
+                                                              .dbInstanceIdentifier(rdsInstanceId)
+                                                              .engine("postgres")
+                                                              .engineVersion("12")
+                                                              .dbInstanceClass("db.t3.micro")
+                                                              .allocatedStorage(20)
+                                                              .masterUsername(rdsUsername)
+                                                              .masterUserPassword(rdsPassword)
+                                                              .dbName(rdsDbName)
+                                                              .build());
+            for (int i = 0; i < 10; i++) {
+                try {
+                    Thread.sleep(1000);
+                    DescribeDbInstancesResponse check = rdsClient.describeDBInstances(DescribeDbInstancesRequest.builder()
+                                                                                                          .dbInstanceIdentifier(rdsInstanceId)
+                                                                                                          .build());
+                    DBInstance db = check.dbInstances().get(0);
+                    String status = db.dbInstanceStatus();
+                    System.out.println("⏳ RDS status: " + status);
+                    if ("available".equalsIgnoreCase(status)) {
+                        System.out.println("✅ RDS instance available: " + rdsInstanceId);
+                        break;
+                    }
+                } catch (InterruptedException ignored) {}
+            }
+        }
+    }
+
+    public void createLambdaFunction() {
+        try {
+            // Check if function exists
+            GetFunctionResponse existing = lambdaClient.getFunction(
+                    GetFunctionRequest.builder().functionName(functionName).build()
+            );
+            System.out.println("Lambda function already exists: " + existing.configuration().functionName());
+        } catch (LambdaException e) {
+            // Create Lambda function
+            CreateFunctionRequest request = null;
+            try {
+                request = CreateFunctionRequest.builder()
+                                               .functionName(functionName)
+                                               .runtime(runtime)
+                                               .role("arn:aws:iam::000000000000:role/lambda-ex") // dummy role for LocalStack
+                                               .handler(handler)
+                                               .code(FunctionCode.builder()
+                                                                 .zipFile(SdkBytes.fromByteArray(Files.readAllBytes(Paths.get("src/main/resources/lambda/demo-function.zip"))))
+                                                                 .build())
+                                               .build();
+            } catch (IOException ex) {
+                System.out.println("Lambda error : " + ex);
+            }
+            lambdaClient.createFunction(request);
+            System.out.println("Lambda function created: " + functionName);
         }
     }
 }

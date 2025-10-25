@@ -17,7 +17,7 @@ jobs:
         ports:
           - 4566:4566
         env:
-          SERVICES: s3,sqs,dynamodb,ses,sts
+          SERVICES: s3,sqs,dynamodb,ses,sts,rds,lambda,apigateway,secretsmanager
           DEFAULT_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test

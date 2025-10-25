@@ -15,7 +15,7 @@ spec:
       containers:
         - name: springboot-app
           image: springboot-aws-localstack:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           ports:
             - containerPort: 8080
           env:
